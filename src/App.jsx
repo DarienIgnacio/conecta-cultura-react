@@ -1,24 +1,75 @@
-import Bienvenida from "./components/Bienvenida";
+import { useEffect, useState } from "react";
 import Cabecera from "./components/Cabecera";
-import TarjetaActividad from "./components/TarjetaActividad";
 import Navegacion from "./components/Navegacion";
-import PiePagina from "./components/PiePagina";
+import Cartelera from "./pages/Cartelera";
 import { actividades } from "./data/actividades";
+import PiePagina from "./components/PiePagina";
+import MisInscripciones from "./pages/MisInscripciones";
+import Bienvenida from "./components/Bienvenida";
+
 
 function App() {
+  const [categoria, setCategoria] = useState("Todas");
+
+  const visibles = categoria === "Todas"
+    ? actividades
+    : actividades.filter((actividad) => actividad.categoria === categoria);
+
+  
+  const [inscripciones, setInscripciones] = useState(() => {
+  const guardadas = localStorage.getItem("inscripciones");
+  return guardadas ? JSON.parse(guardadas) : [];
+  });
+
+  useEffect(() => {
+  localStorage.setItem(
+    "inscripciones",
+    JSON.stringify(inscripciones)
+  );
+  }, [inscripciones]);
+
+
+
+  function inscribir(actividad) {
+    const yaExiste = inscripciones.some((item) => item.id === actividad.id);
+
+    if (yaExiste) return;
+
+    setInscripciones([...inscripciones, actividad]);
+  }
+
+  function eliminarInscripcion(id) {
+    setInscripciones(
+      inscripciones.filter((item) => item.id !== id)
+    );
+  }
+
   return (
     <>
       <Cabecera />
-      <Navegacion/>
+      <Navegacion />
+      <Bienvenida />
       <main className="container py-4">
-        <Bienvenida />
-          <div className="row g-4">
-            {actividades.map((actividad) => (
-              <div className="col-12 col-md-6 col-lg-4">
-                <TarjetaActividad actividad={actividad}/>
-              </div>
-            ))}
-          </div>
+        <select
+          className="form-select mb-4"
+          value={categoria}
+          onChange={(evento) => setCategoria(evento.target.value)}
+        >
+          <option>Todas</option>
+          <option>Música</option>
+          <option>Artes visuales</option>
+          <option>Bienestar</option>
+          <option>Gastronomía</option>
+        </select>
+        <Cartelera
+          actividades={visibles}
+          onInscribir={inscribir}
+        />
+        <hr></hr>
+        <MisInscripciones
+          inscripciones={inscripciones}
+          onEliminar={eliminarInscripcion}
+        />
       </main>
       <PiePagina/>
     </>
